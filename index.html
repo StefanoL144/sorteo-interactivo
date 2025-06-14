@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sorteo Interactivo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 10px;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .number {
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .number.taken {
+      background-color: #e74c3c;
+      cursor: not-allowed;
+    }
+    #formContainer {
+      display: none;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-top: 20px;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input[type="text"], input[type="tel"] {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button.submit-btn {
+      background: #3498db;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sorteo Interactivo</h1>
+  <div class="grid" id="numberGrid"></div>
+
+  <div id="formContainer">
+    <h2>Reservar Número <span id="selectedNumber"></span></h2>
+    <input type="text" id="nombre" placeholder="Nombre completo" required>
+    <input type="tel" id="contacto" placeholder="Número de contacto" required>
+    <button class="submit-btn" onclick="guardarDatos()">Confirmar</button>
+  </div>
+
+  <script>
+    const numberGrid = document.getElementById('numberGrid');
+    const formContainer = document.getElementById('formContainer');
+    const selectedNumberSpan = document.getElementById('selectedNumber');
+    let selectedNumber = null;
+    let reservas = {};
+
+    // Crear botones del 1 al 100
+    for (let i = 1; i <= 100; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.className = 'number';
+      btn.onclick = () => abrirFormulario(i, btn);
+      numberGrid.appendChild(btn);
+    }
+
+    function abrirFormulario(num, btn) {
+      if (btn.classList.contains('taken')) return;
+
+      selectedNumber = num;
+      selectedNumberSpan.textContent = num;
+      formContainer.style.display = 'block';
+    }
+
+    function guardarDatos() {
+      const nombre = document.getElementById('nombre').value.trim();
+      const contacto = document.getElementById('contacto').value.trim();
+
+      if (!nombre || !contacto) {
+        alert("Por favor completa todos los campos.");
+        return;
+      }
+
+      const btns = document.querySelectorAll('.number');
+      const btn = [...btns].find(b => b.textContent == selectedNumber);
+      btn.classList.add('taken');
+      btn.disabled = true;
+
+      reservas[selectedNumber] = { nombre, contacto };
+      console.log(reservas); // Se puede guardar o enviar a servidor
+
+      // Limpiar y cerrar formulario
+      document.getElementById('nombre').value = '';
+      document.getElementById('contacto').value = '';
+      formContainer.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
