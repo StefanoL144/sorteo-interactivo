@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sorteo Interactivo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 10px;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .number {
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .number.taken {
+      background-color: #e74c3c;
+      cursor: not-allowed;
+    }
+    #formContainer {
+      display: none;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-top: 20px;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input[type="text"], input[type="tel"] {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button.submit-btn {
+      background: #3498db;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sorteo Interactivo</h1>
+  <div class="grid" id="numberGrid"></div>  <div id="formContainer">
+    <h2>Reservar Número <span id="selectedNumber"></span></h2>
+    <input type="text" id="nombre" placeholder="Nombre completo" required>
+    <input type="tel" id="contacto" placeholder="Número de contacto" required>
+    <button class="submit-btn" onclick="guardarDatos()">Confirmar</button>
+  </div>  <!-- Firebase SDKs -->  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB9N3zgJByJstWXvtbN4RSjvfuR7GPvzFk",
+      authDomain: "sorteo-interactivo-ebade.firebaseapp.com",
+      projectId: "sorteo-interactivo-ebade",
+      storageBucket: "sorteo-interactivo-ebade.firebasestorage.app",
+      messagingSenderId: "1092809798071",
+      appId: "1:1092809798071:web:9eaf6808a3899b1ae8f832",
+      measurementId: "G-EEP5TP5XDY"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const numberGrid = document.getElementById('numberGrid');
+    const formContainer = document.getElementById('formContainer');
+    const selectedNumberSpan = document.getElementById('selectedNumber');
+    let selectedNumber = null;
+
+    // Crear botones del 1 al 100
+    for (let i = 1; i <= 100; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.className = 'number';
+      btn.id = `num-${i}`;
+      btn.onclick = () => abrirFormulario(i);
+      numberGrid.appendChild(btn);
+    }
+
+    async function abrirFormulario(num) {
+      const doc = await db.collection("reservas").doc(num.toString()).get();
+      if (doc.exists) return alert("Número ya reservado");
+
+      selectedNumber = num;
+      selectedNumberSpan.textContent = num;
+      formContainer.style.display = 'block';
+    }
+
+    async function guardarDatos() {
+      const nombre = document.getElementById('nombre').value.trim();
+      const contacto = document.getElementById('contacto').value.trim();
+
+      if (!nombre || !contacto) return alert("Completa todos los campos.");
+
+      await db.collection("reservas").doc(selectedNumber.toString()).set({ nombre, contacto });
+      marcarComoTomado(selectedNumber);
+
+      // Limpiar
+      document.getElementById('nombre').value = '';
+      document.getElementById('contacto').value = '';
+      formContainer.style.display = 'none';
+    }
+
+    function marcarComoTomado(num) {
+      const btn = document.getElementById(`num-${num}`);
+      if (btn) {
+        btn.classList.add('taken');
+        btn.disabled = true;
+      }
+    }
+
+    // Cargar reservas al abrir
+    async function cargarReservas() {
+      const snapshot = await db.collection("reservas").get();
+      snapshot.forEach(doc => {
+        const num = doc.id;
+        marcarComoTomado(num);
+      });
+    }
+
+    cargarReservas();
+  </script></body>
+</html>
